@@ -49,7 +49,7 @@ jobs:
               case $dir in
                 *Linux-*.AppImage*)
                     # Linux AppImages
-                    mv "${dir}/${dir}" "distrib/${dir}"
+                    mv "${dir}"/*.AppImage* "distrib/${dir}"
                     ;;
                 *Linux-*)
                     # Portable Linux tarballs
@@ -65,7 +65,7 @@ jobs:
                     ;;
                 *Windows-*)
                     # Windows zips (portable and non-portable)
-                    zip "distrib/${dir}.zip" $dir/*
+                    zip "distrib/${dir}.zip" "${dir}"/*
                     ;;
                 PrismLauncher-source)
                     # Source tarball
