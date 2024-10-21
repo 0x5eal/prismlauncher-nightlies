@@ -31,6 +31,10 @@ jobs:
         git fetch upstream develop
         git rebase upstream/develop
 
+        # Remove actions triggers we don't need
+        rm .github/workflows/trigger_builds.yml .github/workflows/trigger_release.yml
+        git status --porcelain | grep -q . && git add -A && git commit -m "chore(actions): remove trigger workflows"
+
         # Push if there were changes
         git diff --quiet origin/develop || git push --force-with-lease
         
