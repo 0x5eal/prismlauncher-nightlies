@@ -42,15 +42,14 @@ jobs:
           echo "COMMIT_HASH=$commit_hash" >> $GITHUB_ENV
       - name: Pack release artifacts
         run: |
-          set -e
-          set -x
+          set -ex
           mkdir distrib/
           for dir in PrismLauncher-*; do
             if [ -d "$dir" ]; then
               case $dir in
                 *Linux-*.AppImage*)
                     # Linux AppImages
-                    mv "${dir}/*.AppImage*" "distrib/${dir}"
+                    mv "${dir}/${dir}" "distrib/${dir}"
                     ;;
                 *Linux-*)
                     # Portable Linux tarballs
