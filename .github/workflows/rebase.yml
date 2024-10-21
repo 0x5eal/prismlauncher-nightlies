@@ -1,0 +1,41 @@
+name: Rebase Upstream
+on:
+  schedule:
+  - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GH_PAT }}
+
+    - name: Use PAT for origin
+      run: |
+        GITHUB_TOKEN=${{ secrets.GH_PAT }}
+        old_origin=$(git remote get-url origin)
+        git remote set-url origin "${old_origin/https:\/\//https:\/\/$GITHUB_TOKEN@}"
+      shell: bash
+      
+    - name: Rebase upstream changes
+      run: |
+        # Configure committer identity
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global user.name  "GitHub Actions"
+
+        # Fetch changes and rebase
+        git remote add upstream https://github.com/PrismLauncher/PrismLauncher.git
+        git fetch upstream develop
+        git rebase upstream/develop
+
+        # Push if there were changes
+        git diff --quiet origin/develop || git push --force-with-lease
+        
+    - name: Trigger nightly release
+      uses: peter-evans/repository-dispatch@v3
+      with:
+        repository: 0x5eal/prismlauncher-nightlies
+        event-type: release
