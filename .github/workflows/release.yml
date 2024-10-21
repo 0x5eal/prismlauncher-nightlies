@@ -61,7 +61,7 @@ jobs:
                     ;;
                 *Windows-*Setup-*)
                     # Windows setup exes
-                    mv "${dir}/PrismLauncher-setup.exe" "distrib/${dir}.exe"
+                    mv "${dir}/PrismLauncher-Setup.exe" "distrib/${dir}.exe"
                     ;;
                 *Windows-*)
                     # Windows zips (portable and non-portable)
