@@ -33,13 +33,22 @@ jobs:
       - name: Grab and store version
         working-directory: "PrismLauncher-source"
         run: |
-          tag_name=$(git describe --long --tags | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g')
-          echo "VERSION=$tag_name" >> $GITHUB_ENV
-
           # The GITHUB_SHA environment variable may not exist for workflow and repo
           # dispatches, so we get a short hash ourselves
           commit_hash=$(git rev-parse --short HEAD)
           echo "COMMIT_HASH=$commit_hash" >> $GITHUB_ENV
+
+          # https://stackoverflow.com/a/12704727
+          upstream_latest_tag=$(
+            git -c 'versionsort.suffix=-' \
+              ls-remote \
+              --exit-code --refs --sort='version:refname' --tags \
+              https://github.com/PrismLauncher/PrismLauncher.git '*.*.*' \
+              | tail --lines=1 \
+              | cut --delimiter='/' --fields=3
+          )
+          tag_name="v${upstream_latest_tag}-${commit_hash}"
+          echo "VERSION=$tag_name" >> $GITHUB_ENV
       - name: Pack release artifacts
         run: |
           set -ex
