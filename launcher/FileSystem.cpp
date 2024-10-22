@@ -45,6 +45,7 @@
 #include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
+#include <QSaveFile>
 #include <QStandardPaths>
 #include <QStorageInfo>
 #include <QTextStream>
@@ -53,7 +54,6 @@
 #include <system_error>
 
 #include "DesktopServices.h"
-#include "PSaveFile.h"
 #include "StringUtils.h"
 
 #if defined Q_OS_WIN32
@@ -191,8 +191,8 @@ void ensureExists(const QDir& dir)
 void write(const QString& filename, const QByteArray& data)
 {
     ensureExists(QFileInfo(filename).dir());
-    PSaveFile file(filename);
-    if (!file.open(PSaveFile::WriteOnly)) {
+    QSaveFile file(filename);
+    if (!file.open(QSaveFile::WriteOnly)) {
         throw FileSystemException("Couldn't open " + filename + " for writing: " + file.errorString());
     }
     if (data.size() != file.write(data)) {
@@ -213,8 +213,8 @@ void appendSafe(const QString& filename, const QByteArray& data)
         buffer = QByteArray();
     }
     buffer.append(data);
-    PSaveFile file(filename);
-    if (!file.open(PSaveFile::WriteOnly)) {
+    QSaveFile file(filename);
+    if (!file.open(QSaveFile::WriteOnly)) {
         throw FileSystemException("Couldn't open " + filename + " for writing: " + file.errorString());
     }
     if (buffer.size() != file.write(buffer)) {
@@ -971,7 +971,8 @@ bool createShortcut(QString destination, QString target, QStringList args, QStri
     if (!args.empty())
         argstring = " \"" + args.join("\" \"") + "\"";
 
-    stream << "#!/bin/bash" << "\n";
+    stream << "#!/bin/bash"
+           << "\n";
     stream << "\"" << target << "\" " << argstring << "\n";
 
     stream.flush();
@@ -1015,9 +1016,12 @@ bool createShortcut(QString destination, QString target, QStringList args, QStri
     if (!args.empty())
         argstring = " '" + args.join("' '") + "'";
 
-    stream << "[Desktop Entry]" << "\n";
-    stream << "Type=Application" << "\n";
-    stream << "Categories=Game;ActionGame;AdventureGame;Simulation" << "\n";
+    stream << "[Desktop Entry]"
+           << "\n";
+    stream << "Type=Application"
+           << "\n";
+    stream << "Categories=Game;ActionGame;AdventureGame;Simulation"
+           << "\n";
     stream << "Exec=\"" << target.toLocal8Bit() << "\"" << argstring.toLocal8Bit() << "\n";
     stream << "Name=" << name.toLocal8Bit() << "\n";
     if (!icon.isEmpty()) {

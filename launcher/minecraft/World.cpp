@@ -38,6 +38,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QDirIterator>
+#include <QSaveFile>
 #include <QString>
 
 #include <FileSystem.h>
@@ -56,7 +57,6 @@
 #include <optional>
 
 #include "FileSystem.h"
-#include "PSaveFile.h"
 
 using std::nullopt;
 using std::optional;
@@ -183,7 +183,7 @@ bool putLevelDatDataToFS(const QFileInfo& file, QByteArray& data)
     if (fullFilePath.isNull()) {
         return false;
     }
-    PSaveFile f(fullFilePath);
+    QSaveFile f(fullFilePath);
     if (!f.open(QIODevice::WriteOnly)) {
         return false;
     }

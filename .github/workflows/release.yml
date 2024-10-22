@@ -1,0 +1,97 @@
+name: Build Application
+
+on:
+  repository_dispatch: 
+    types: [release]
+  workflow_dispatch:
+
+jobs:
+  build_release:
+    strategy:
+      matrix:
+        build_type: [Release, RelWithDebInfo, MinSizeRel]
+
+    name: Build
+    uses: ./.github/workflows/build.yml
+    with:
+      build_type: ${{ matrix.build_type }}
+      is_qt_cached: true
+
+  create_release:
+    needs: build_release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+          path: "PrismLauncher-source"
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+      - name: Grab and store version
+        working-directory: "PrismLauncher-source"
+        run: |
+          # The GITHUB_SHA environment variable may not exist for workflow and repo
+          # dispatches, so we get a short hash ourselves
+          commit_hash=$(git rev-parse --short HEAD)
+          echo "COMMIT_HASH=$commit_hash" >> $GITHUB_ENV
+
+          # https://stackoverflow.com/a/12704727
+          upstream_latest_tag=$(
+            git -c 'versionsort.suffix=-' \
+              ls-remote \
+              --exit-code --refs --sort='version:refname' --tags \
+              https://github.com/PrismLauncher/PrismLauncher.git \
+              | tail --lines=1 \
+              | cut --delimiter='/' --fields=3
+          )
+          tag_name="v${upstream_latest_tag}-${commit_hash}"
+          echo "VERSION=$tag_name" >> $GITHUB_ENV
+      - name: Pack release artifacts
+        run: |
+          set -ex
+          mkdir distrib/
+          for dir in PrismLauncher-*; do
+            if [ -d "$dir" ]; then
+              case $dir in
+                *Linux-*.AppImage*)
+                    # Linux AppImages
+                    mv "${dir}"/*.AppImage* "distrib/${dir}"
+                    ;;
+                *Linux-*)
+                    # Portable Linux tarballs
+                    mv "${dir}/PrismLauncher-portable.tar.gz" "distrib/${dir}.tar.gz"
+                    ;;
+                *macOS-*)
+                    # macOS and macOS-Legacy zips
+                    mv "${dir}/PrismLauncher.zip" "distrib/${dir}.zip"
+                    ;;
+                *Windows-*Setup-*)
+                    # Windows setup exes
+                    mv "${dir}/PrismLauncher-Setup.exe" "distrib/${dir}.exe"
+                    ;;
+                *Windows-*)
+                    # Windows zips (portable and non-portable)
+                    env -C "${dir}" zip -r "../distrib/${dir}.zip" *
+                    ;;
+                PrismLauncher-source)
+                    # Source tarball
+                    tar -czvf "distrib/PrismLauncher-$VERSION.tar.gz" -C "${dir}" .
+                    ;;
+              esac
+            fi
+          done
+      - name: Create release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.VERSION }}
+          name: Nightly ${{ env.COMMIT_HASH }}
+          draft: false
+          fail_on_unmatched_files: true
+          prerelease: false
+          files: | 
+            distrib/**

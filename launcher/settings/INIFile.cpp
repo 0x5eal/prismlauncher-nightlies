@@ -39,6 +39,7 @@
 
 #include <QDebug>
 #include <QFile>
+#include <QSaveFile>
 #include <QStringList>
 #include <QTemporaryFile>
 #include <QTextStream>

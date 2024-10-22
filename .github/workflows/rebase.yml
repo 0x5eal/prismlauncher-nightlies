@@ -1,0 +1,60 @@
+name: Rebase Upstream
+on:
+  schedule:
+  - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GH_PAT }}
+
+    - name: Use PAT for origin
+      run: |
+        GITHUB_TOKEN=${{ secrets.GH_PAT }}
+        old_origin=$(git remote get-url origin)
+        git remote set-url origin "${old_origin/https:\/\//https:\/\/$GITHUB_TOKEN@}"
+      shell: bash
+      
+    - name: Rebase upstream changes
+      id: rebase
+      run: |
+        function commit_on_change {
+          git status --porcelain | grep -q . && git add -A && git commit -m "$1"
+        }
+        
+        # Configure committer identity
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global user.name  "GitHub Actions"
+
+        # Configure merge driver
+        git config --global merge.ours.driver true
+        attributes="README.md merge=ours\n.github/workflows/** merge=ours"
+        grep -q "$attributes" .gitattributes || echo "$attributes" >> .gitattributes
+        commit_on_change "chore(gitattributes): reapply merge driver"
+
+        # Fetch changes and rebase
+        git remote add upstream https://github.com/PrismLauncher/PrismLauncher.git
+        git fetch upstream develop
+        git rebase upstream/develop -X theirs
+
+        # Remove actions triggers we don't need
+        rm .github/workflows/trigger_builds.yml .github/workflows/trigger_release.yml
+        commit_on_change "chore(actions): remove trigger workflows"
+          
+        # Push and allow triggering release if there were changes
+        if ! git diff --quiet origin/develop -- . ':(exclude).gitattributes' ':(exclude).github/workflows/'; then
+          echo "has_changed=true" >> $GITHUB_OUTPUT
+          git push --force-with-lease
+        fi
+        
+    - name: Trigger nightly release
+      if: ${{ steps.rebase.outputs.has_changed }}
+      uses: peter-evans/repository-dispatch@v3
+      with:
+        repository: 0x5eal/prismlauncher-nightlies
+        event-type: release
