@@ -2,3 +2,4 @@
 **/testdata/** -text -diff
 README.md merge=ours\n.github/workflows/** merge=ours
 README.md merge=ours\n.github/workflows/** merge=ours
+README.md merge=ours\n.github/workflows/** merge=ours
