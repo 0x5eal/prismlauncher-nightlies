@@ -58,7 +58,7 @@ class MSADeviceCodeStep : public AuthStep {
     void authorizeWithBrowser(QString url, QString code, int expiresIn);
 
    private slots:
-    void deviceAuthorizationFinished();
+    void deviceAutorizationFinished();
     void startPoolTimer();
     void authenticateUser();
     void authenticationFinished();

@@ -47,7 +47,7 @@ class LaunchController : public Task {
    public:
     void executeTask() override;
 
-    LaunchController();
+    LaunchController(QObject* parent = nullptr);
     virtual ~LaunchController() = default;
 
     void setInstance(InstancePtr instance) { m_instance = instance; }
@@ -55,8 +55,6 @@ class LaunchController : public Task {
     InstancePtr instance() { return m_instance; }
 
     void setOnline(bool online) { m_online = online; }
-
-    void setOfflineName(const QString& offlineName) { m_offlineName = offlineName; }
 
     void setDemo(bool demo) { m_demo = demo; }
 
@@ -78,7 +76,6 @@ class LaunchController : public Task {
     void decideAccount();
     bool askPlayDemo();
     QString askOfflineName(QString playerName, bool demo, bool& ok);
-    bool reauthenticateCurrentAccount();
 
    private slots:
     void readyForLaunch();
@@ -90,7 +87,6 @@ class LaunchController : public Task {
    private:
     BaseProfilerFactory* m_profiler = nullptr;
     bool m_online = true;
-    QString m_offlineName;
     bool m_demo = false;
     InstancePtr m_instance;
     QWidget* m_parentWidget = nullptr;

@@ -24,7 +24,6 @@
 
 #include "ui_SelectReleaseDialog.h"
 
-#include <QPushButton>
 #include <QTextBrowser>
 #include "Markdown.h"
 #include "StringUtils.h"
@@ -56,9 +55,6 @@ SelectReleaseDialog::SelectReleaseDialog(const Version& current_version, const Q
 
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &SelectReleaseDialog::accept);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &SelectReleaseDialog::reject);
-
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("OK"));
 }
 
 SelectReleaseDialog::~SelectReleaseDialog()

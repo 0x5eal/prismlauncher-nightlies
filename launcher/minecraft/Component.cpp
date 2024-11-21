@@ -222,12 +222,11 @@ bool Component::isMoveable()
     return true;
 }
 
-bool Component::isVersionChangeable(bool wait)
+bool Component::isVersionChangeable()
 {
     auto list = getVersionList();
     if (list) {
-        if (wait)
-            list->waitToLoad();
+        list->waitToLoad();
         return list->count() != 0;
     }
     return false;

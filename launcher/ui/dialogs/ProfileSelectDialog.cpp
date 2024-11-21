@@ -18,7 +18,6 @@
 
 #include <QDebug>
 #include <QItemSelectionModel>
-#include <QPushButton>
 
 #include "Application.h"
 
@@ -71,9 +70,6 @@ ProfileSelectDialog::ProfileSelectDialog(const QString& message, int flags, QWid
     ui->listView->setCurrentIndex(ui->listView->model()->index(0, 0));
 
     connect(ui->listView, SIGNAL(doubleClicked(QModelIndex)), SLOT(on_buttonBox_accepted()));
-
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("OK"));
 }
 
 ProfileSelectDialog::~ProfileSelectDialog()

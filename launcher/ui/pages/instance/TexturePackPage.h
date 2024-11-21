@@ -55,12 +55,6 @@ class TexturePackPage : public ExternalResourcesPage {
     virtual bool shouldDisplay() const override { return m_instance->traits().contains("texturepacks"); }
 
    public slots:
-    void updateFrame(const QModelIndex& current, const QModelIndex& previous) override;
-    void downloadTexturePacks();
-    void updateTexturePacks();
-    void deleteTexturePackMetadata();
-    void changeTexturePackVersion();
-
-   private:
-    std::shared_ptr<TexturePackFolderModel> m_model;
+    bool onSelectionChanged(const QModelIndex& current, const QModelIndex& previous) override;
+    void downloadTPs();
 };

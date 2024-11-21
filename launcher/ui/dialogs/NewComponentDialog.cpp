@@ -68,9 +68,6 @@ NewComponentDialog::NewComponentDialog(const QString& initialName, const QString
 
     ui->nameTextBox->setFocus();
 
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("OK"));
-
     originalPlaceholderText = ui->uidTextBox->placeholderText();
     updateDialogState();
 }

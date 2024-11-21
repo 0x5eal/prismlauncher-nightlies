@@ -8,15 +8,12 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
-#include <QRegularExpression>
 #include <QString>
 
 #include "FileSystem.h"
 #include "Json.h"
 #include "minecraft/mod/ModDetails.h"
 #include "settings/INIFile.h"
-
-static QRegularExpression newlineRegex("\r\n|\n|\r");
 
 namespace ModUtils {
 
@@ -27,7 +24,7 @@ namespace ModUtils {
 // https://github.com/MinecraftForge/FML/wiki/FML-mod-information-file/5bf6a2d05145ec79387acc0d45c958642fb049fc
 ModDetails ReadMCModInfo(QByteArray contents)
 {
-    auto getInfoFromArray = [](QJsonArray arr) -> ModDetails {
+    auto getInfoFromArray = [&](QJsonArray arr) -> ModDetails {
         if (!arr.at(0).isObject()) {
             return {};
         }
@@ -490,11 +487,11 @@ bool processZIP(Mod& mod, [[maybe_unused]] ProcessingLevel level)
                 }
 
                 // quick and dirty line-by-line parser
-                auto manifestLines = QString(file.readAll()).split(newlineRegex);
+                auto manifestLines = file.readAll().split('\n');
                 QString manifestVersion = "";
                 for (auto& line : manifestLines) {
-                    if (line.startsWith("Implementation-Version: ", Qt::CaseInsensitive)) {
-                        manifestVersion = line.remove("Implementation-Version: ", Qt::CaseInsensitive);
+                    if (QString(line).startsWith("Implementation-Version: ")) {
+                        manifestVersion = QString(line).remove("Implementation-Version: ");
                         break;
                     }
                 }
@@ -733,7 +730,7 @@ bool loadIconFile(const Mod& mod, QPixmap* pixmap)
 }  // namespace ModUtils
 
 LocalModParseTask::LocalModParseTask(int token, ResourceType type, const QFileInfo& modFile)
-    : Task(false), m_token(token), m_type(type), m_modFile(modFile), m_result(new Result())
+    : Task(nullptr, false), m_token(token), m_type(type), m_modFile(modFile), m_result(new Result())
 {}
 
 bool LocalModParseTask::abort()

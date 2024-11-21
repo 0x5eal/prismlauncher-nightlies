@@ -51,7 +51,7 @@ class QFileSystemWatcher;
 class IconList : public QAbstractListModel {
     Q_OBJECT
    public:
-    explicit IconList(const QStringList& builtinPaths, const QString& path, QObject* parent = 0);
+    explicit IconList(const QStringList& builtinPaths, QString path, QObject* parent = 0);
     virtual ~IconList() {};
 
     QIcon getIcon(const QString& key) const;
@@ -72,7 +72,6 @@ class IconList : public QAbstractListModel {
     bool deleteIcon(const QString& key);
     bool trashIcon(const QString& key);
     bool iconFileExists(const QString& key) const;
-    QString iconDirectory(const QString& key) const;
 
     void installIcons(const QStringList& iconFiles);
     void installIcon(const QString& file, const QString& name);
@@ -92,20 +91,18 @@ class IconList : public QAbstractListModel {
     IconList& operator=(const IconList&) = delete;
     void reindex();
     void sortIconList();
-    bool addPathRecursively(const QString& path);
-    QStringList getIconFilePaths() const;
 
    public slots:
     void directoryChanged(const QString& path);
 
    protected slots:
     void fileChanged(const QString& path);
-    void SettingChanged(const Setting& setting, const QVariant& value);
+    void SettingChanged(const Setting& setting, QVariant value);
 
    private:
     shared_qobject_ptr<QFileSystemWatcher> m_watcher;
-    bool m_isWatching;
-    QMap<QString, int> m_nameIndex;
-    QVector<MMCIcon> m_icons;
+    bool is_watching;
+    QMap<QString, int> name_index;
+    QVector<MMCIcon> icons;
     QDir m_dir;
 };

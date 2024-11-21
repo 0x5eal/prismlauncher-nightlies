@@ -243,8 +243,7 @@ bool ModrinthCreationTask::createInstance()
 
     auto root_modpack_path = FS::PathCombine(m_stagingPath, m_root_path);
     auto root_modpack_url = QUrl::fromLocalFile(root_modpack_path);
-    // TODO make this work with other sorts of resource
-    QHash<QString, Resource*> resources;
+    QHash<QString, Mod*> mods;
     for (auto file : m_files) {
         auto fileName = file.path;
         fileName = FS::RemoveInvalidPathChars(fileName);
@@ -260,16 +259,14 @@ bool ModrinthCreationTask::createInstance()
             ModDetails d;
             d.mod_id = file_path;
             mod->setDetails(d);
-            resources[file.hash.toHex()] = mod;
+            mods[file.hash.toHex()] = mod;
         }
-        if (file.downloads.empty()) {
-            setError(tr("The file '%1' is missing a download link. This is invalid in the pack format.").arg(fileName));
-            return false;
-        }
+
         qDebug() << "Will try to download" << file.downloads.front() << "to" << file_path;
         auto dl = Net::ApiDownload::makeFile(file.downloads.dequeue(), file_path);
         dl->addValidator(new Net::ChecksumValidator(file.hashAlgorithm, file.hash));
         downloadMods->addNetAction(dl);
+
         if (!file.downloads.empty()) {
             // FIXME: This really needs to be put into a ConcurrentTask of
             // MultipleOptionsTask's , once those exist :)
@@ -286,13 +283,13 @@ bool ModrinthCreationTask::createInstance()
 
     bool ended_well = false;
 
-    connect(downloadMods.get(), &NetJob::succeeded, this, [&ended_well]() { ended_well = true; });
-    connect(downloadMods.get(), &NetJob::failed, [this, &ended_well](const QString& reason) {
+    connect(downloadMods.get(), &NetJob::succeeded, this, [&]() { ended_well = true; });
+    connect(downloadMods.get(), &NetJob::failed, [&](const QString& reason) {
         ended_well = false;
         setError(reason);
     });
     connect(downloadMods.get(), &NetJob::finished, &loop, &QEventLoop::quit);
-    connect(downloadMods.get(), &NetJob::progress, [this](qint64 current, qint64 total) {
+    connect(downloadMods.get(), &NetJob::progress, [&](qint64 current, qint64 total) {
         setDetails(tr("%1 out of %2 complete").arg(current).arg(total));
         setProgress(current, total);
     });
@@ -305,18 +302,18 @@ bool ModrinthCreationTask::createInstance()
     loop.exec();
 
     if (!ended_well) {
-        for (auto resource : resources) {
-            delete resource;
+        for (auto m : mods) {
+            delete m;
         }
         return ended_well;
     }
 
     QEventLoop ensureMetaLoop;
     QDir folder = FS::PathCombine(instance.modsRoot(), ".index");
-    auto ensureMetadataTask = makeShared<EnsureMetadataTask>(resources, folder, ModPlatform::ResourceProvider::MODRINTH);
-    connect(ensureMetadataTask.get(), &Task::succeeded, this, [&ended_well]() { ended_well = true; });
+    auto ensureMetadataTask = makeShared<EnsureMetadataTask>(mods, folder, ModPlatform::ResourceProvider::MODRINTH);
+    connect(ensureMetadataTask.get(), &Task::succeeded, this, [&]() { ended_well = true; });
     connect(ensureMetadataTask.get(), &Task::finished, &ensureMetaLoop, &QEventLoop::quit);
-    connect(ensureMetadataTask.get(), &Task::progress, [this](qint64 current, qint64 total) {
+    connect(ensureMetadataTask.get(), &Task::progress, [&](qint64 current, qint64 total) {
         setDetails(tr("%1 out of %2 complete").arg(current).arg(total));
         setProgress(current, total);
     });
@@ -326,10 +323,10 @@ bool ModrinthCreationTask::createInstance()
     m_task = ensureMetadataTask;
 
     ensureMetaLoop.exec();
-    for (auto resource : resources) {
-        delete resource;
+    for (auto m : mods) {
+        delete m;
     }
-    resources.clear();
+    mods.clear();
 
     // Update information of the already installed instance, if any.
     if (m_instance && ended_well) {

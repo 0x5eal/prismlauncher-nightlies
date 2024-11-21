@@ -1,23 +1,22 @@
 #pragma once
 
 #include "ModIndex.h"
-#include "net/NetJob.h"
 
 #include "modplatform/helpers/HashUtils.h"
 
-#include "minecraft/mod/Resource.h"
 #include "tasks/ConcurrentTask.h"
 
+#include <QDir>
+
 class Mod;
-class QDir;
 
 class EnsureMetadataTask : public Task {
     Q_OBJECT
 
    public:
-    EnsureMetadataTask(Resource*, QDir, ModPlatform::ResourceProvider = ModPlatform::ResourceProvider::MODRINTH);
-    EnsureMetadataTask(QList<Resource*>&, QDir, ModPlatform::ResourceProvider = ModPlatform::ResourceProvider::MODRINTH);
-    EnsureMetadataTask(QHash<QString, Resource*>&, QDir, ModPlatform::ResourceProvider = ModPlatform::ResourceProvider::MODRINTH);
+    EnsureMetadataTask(Mod*, QDir, ModPlatform::ResourceProvider = ModPlatform::ResourceProvider::MODRINTH);
+    EnsureMetadataTask(QList<Mod*>&, QDir, ModPlatform::ResourceProvider = ModPlatform::ResourceProvider::MODRINTH);
+    EnsureMetadataTask(QHash<QString, Mod*>&, QDir, ModPlatform::ResourceProvider = ModPlatform::ResourceProvider::MODRINTH);
 
     ~EnsureMetadataTask() = default;
 
@@ -38,23 +37,23 @@ class EnsureMetadataTask : public Task {
 
     // Helpers
     enum class RemoveFromList { Yes, No };
-    void emitReady(Resource*, QString key = {}, RemoveFromList = RemoveFromList::Yes);
-    void emitFail(Resource*, QString key = {}, RemoveFromList = RemoveFromList::Yes);
+    void emitReady(Mod*, QString key = {}, RemoveFromList = RemoveFromList::Yes);
+    void emitFail(Mod*, QString key = {}, RemoveFromList = RemoveFromList::Yes);
 
     // Hashes and stuff
-    auto createNewHash(Resource*) -> Hashing::Hasher::Ptr;
-    auto getExistingHash(Resource*) -> QString;
+    auto createNewHash(Mod*) -> Hashing::Hasher::Ptr;
+    auto getExistingHash(Mod*) -> QString;
 
    private slots:
-    void modrinthCallback(ModPlatform::IndexedPack& pack, ModPlatform::IndexedVersion& ver, Resource*);
-    void flameCallback(ModPlatform::IndexedPack& pack, ModPlatform::IndexedVersion& ver, Resource*);
+    void modrinthCallback(ModPlatform::IndexedPack& pack, ModPlatform::IndexedVersion& ver, Mod*);
+    void flameCallback(ModPlatform::IndexedPack& pack, ModPlatform::IndexedVersion& ver, Mod*);
 
    signals:
-    void metadataReady(Resource*);
-    void metadataFailed(Resource*);
+    void metadataReady(Mod*);
+    void metadataFailed(Mod*);
 
    private:
-    QHash<QString, Resource*> m_resources;
+    QHash<QString, Mod*> m_mods;
     QDir m_index_dir;
     ModPlatform::ResourceProvider m_provider;
 

@@ -21,7 +21,7 @@ void Resource::setFile(QFileInfo file_info)
     parseFile();
 }
 
-static std::tuple<QString, qint64> calculateFileSize(const QFileInfo& file)
+std::tuple<QString, qint64> calculateFileSize(const QFileInfo& file)
 {
     if (file.isDir()) {
         auto dir = QDir(file.absoluteFilePath());
@@ -72,43 +72,11 @@ void Resource::parseFile()
     m_changed_date_time = m_file_info.lastModified();
 }
 
-auto Resource::name() const -> QString
-{
-    if (metadata())
-        return metadata()->name;
-
-    return m_name;
-}
-
 static void removeThePrefix(QString& string)
 {
     QRegularExpression regex(QStringLiteral("^(?:the|teh) +"), QRegularExpression::CaseInsensitiveOption);
     string.remove(regex);
     string = string.trimmed();
-}
-
-auto Resource::provider() const -> QString
-{
-    if (metadata())
-        return ModPlatform::ProviderCapabilities::readableName(metadata()->provider);
-
-    return tr("Unknown");
-}
-
-auto Resource::homepage() const -> QString
-{
-    if (metadata())
-        return ModPlatform::getMetaURL(metadata()->provider, metadata()->project_id);
-
-    return {};
-}
-
-void Resource::setMetadata(std::shared_ptr<Metadata::ModStruct>&& metadata)
-{
-    if (status() == ResourceStatus::NO_METADATA)
-        setStatus(ResourceStatus::INSTALLED);
-
-    m_metadata = metadata;
 }
 
 int Resource::compare(const Resource& other, SortType type) const
@@ -125,7 +93,6 @@ int Resource::compare(const Resource& other, SortType type) const
             QString this_name{ name() };
             QString other_name{ other.name() };
 
-            // TODO do we need this? it could result in 0 being returned
             removeThePrefix(this_name);
             removeThePrefix(other_name);
 
@@ -149,12 +116,6 @@ int Resource::compare(const Resource& other, SortType type) const
                 return 1;
             if (sizeInfo() < other.sizeInfo())
                 return -1;
-            break;
-        }
-        case SortType::PROVIDER: {
-            auto compare_result = QString::compare(provider(), other.provider(), Qt::CaseInsensitive);
-            if (compare_result != 0)
-                return compare_result;
             break;
         }
     }
@@ -213,27 +174,10 @@ bool Resource::enable(EnableAction action)
     return true;
 }
 
-auto Resource::destroy(const QDir& index_dir, bool preserve_metadata, bool attempt_trash) -> bool
+bool Resource::destroy(bool attemptTrash)
 {
     m_type = ResourceType::UNKNOWN;
-
-    if (!preserve_metadata) {
-        qDebug() << QString("Destroying metadata for '%1' on purpose").arg(name());
-        destroyMetadata(index_dir);
-    }
-
-    return (attempt_trash && FS::trash(m_file_info.filePath())) || FS::deletePath(m_file_info.filePath());
-}
-
-auto Resource::destroyMetadata(const QDir& index_dir) -> void
-{
-    if (metadata()) {
-        Metadata::remove(index_dir, metadata()->slug);
-    } else {
-        auto n = name();
-        Metadata::remove(index_dir, n);
-    }
-    m_metadata = nullptr;
+    return (attemptTrash && FS::trash(m_file_info.filePath())) || FS::deletePath(m_file_info.filePath());
 }
 
 bool Resource::isSymLinkUnder(const QString& instPath) const

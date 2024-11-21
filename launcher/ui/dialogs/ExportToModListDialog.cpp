@@ -64,9 +64,6 @@ ExportToModListDialog::ExportToModListDialog(QString name, QList<Mod*> mods, QWi
         this->ui->finalText->selectAll();
         this->ui->finalText->copy();
     });
-
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
-    ui->buttonBox->button(QDialogButtonBox::Save)->setText(tr("Save"));
     triggerImp();
 }
 

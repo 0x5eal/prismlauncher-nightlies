@@ -70,9 +70,6 @@ ProfileSetupDialog::ProfileSetupDialog(MinecraftAccountPtr accountToSetup, QWidg
     connect(&checkStartTimer, &QTimer::timeout, this, &ProfileSetupDialog::startCheck);
 
     setNameStatus(NameStatus::NotSet, QString());
-
-    ui->buttonBox->button(QDialogButtonBox::Cancel)->setText(tr("Cancel"));
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setText(tr("OK"));
 }
 
 ProfileSetupDialog::~ProfileSetupDialog()

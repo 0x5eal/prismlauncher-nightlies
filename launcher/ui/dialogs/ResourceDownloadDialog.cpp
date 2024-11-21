@@ -148,14 +148,10 @@ void ResourceDownloadDialog::confirm()
     QStringList depNames;
     if (auto task = getModDependenciesTask(); task) {
         connect(task.get(), &Task::failed, this,
-                [this](QString reason) { CustomMessageBox::selectable(this, tr("Error"), reason, QMessageBox::Critical)->exec(); });
+                [&](QString reason) { CustomMessageBox::selectable(this, tr("Error"), reason, QMessageBox::Critical)->exec(); });
 
-        auto weak = task.toWeakRef();
-        connect(task.get(), &Task::succeeded, this, [this, weak]() {
-            QStringList warnings;
-            if (auto task = weak.lock()) {
-                warnings = task->warnings();
-            }
+        connect(task.get(), &Task::succeeded, this, [&]() {
+            QStringList warnings = task->warnings();
             if (warnings.count()) {
                 CustomMessageBox::selectable(this, tr("Warnings"), warnings.join('\n'), QMessageBox::Warning)->exec();
             }
@@ -302,7 +298,7 @@ GetModDependenciesTask::Ptr ModDownloadDialog::getModDependenciesTask()
                 selectedVers.append(std::make_shared<GetModDependenciesTask::PackDependency>(selected->getPack(), selected->getVersion()));
             }
 
-            return makeShared<GetModDependenciesTask>(m_instance, model, selectedVers);
+            return makeShared<GetModDependenciesTask>(this, m_instance, model, selectedVers);
         }
     }
     return nullptr;
@@ -381,7 +377,7 @@ QList<BasePage*> ShaderPackDownloadDialog::getPages()
     return pages;
 }
 
-void ResourceDownloadDialog::setResourceMetadata(const std::shared_ptr<Metadata::ModStruct>& meta)
+void ModDownloadDialog::setModMetadata(std::shared_ptr<Metadata::ModStruct> meta)
 {
     switch (meta->provider) {
         case ModPlatform::ResourceProvider::MODRINTH:

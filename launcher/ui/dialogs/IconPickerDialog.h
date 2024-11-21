@@ -16,8 +16,6 @@
 #pragma once
 #include <QDialog>
 #include <QItemSelection>
-#include <QLineEdit>
-#include <QSortFilterProxyModel>
 
 namespace Ui {
 class IconPickerDialog;
@@ -38,8 +36,6 @@ class IconPickerDialog : public QDialog {
    private:
     Ui::IconPickerDialog* ui;
     QPushButton* buttonRemove;
-    QLineEdit* searchBar;
-    QSortFilterProxyModel* proxyModel;
 
    private slots:
     void selectionChanged(QItemSelection, QItemSelection);
@@ -48,5 +44,4 @@ class IconPickerDialog : public QDialog {
     void addNewIcon();
     void removeSelectedIcon();
     void openFolder();
-    void filterIcons(const QString& text);
 };

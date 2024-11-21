@@ -37,7 +37,7 @@ class DummyResourceAPI : public ResourceAPI {
     [[nodiscard]] Task::Ptr searchProjects(SearchArgs&&, SearchCallbacks&& callbacks) const override
     {
         auto task = makeShared<SearchTask>();
-        QObject::connect(task.get(), &Task::succeeded, [callbacks] {
+        QObject::connect(task.get(), &Task::succeeded, [=] {
             auto json = searchRequestResult();
             callbacks.on_succeed(json);
         });

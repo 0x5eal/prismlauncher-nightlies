@@ -74,12 +74,12 @@ void MSADeviceCodeStep::perform()
     m_task->setAskRetry(false);
     m_task->addNetAction(m_request);
 
-    connect(m_task.get(), &Task::finished, this, &MSADeviceCodeStep::deviceAuthorizationFinished);
+    connect(m_task.get(), &Task::finished, this, &MSADeviceCodeStep::deviceAutorizationFinished);
 
     m_task->start();
 }
 
-struct DeviceAuthorizationResponse {
+struct DeviceAutorizationResponse {
     QString device_code;
     QString user_code;
     QString verification_uri;
@@ -90,17 +90,17 @@ struct DeviceAuthorizationResponse {
     QString error_description;
 };
 
-DeviceAuthorizationResponse parseDeviceAuthorizationResponse(const QByteArray& data)
+DeviceAutorizationResponse parseDeviceAutorizationResponse(const QByteArray& data)
 {
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(data, &err);
     if (err.error != QJsonParseError::NoError) {
-        qWarning() << "Failed to parse device authorization response due to err:" << err.errorString();
+        qWarning() << "Failed to parse device autorization response due to err:" << err.errorString();
         return {};
     }
 
     if (!doc.isObject()) {
-        qWarning() << "Device authorization response is not an object";
+        qWarning() << "Device autorization response is not an object";
         return {};
     }
     auto obj = doc.object();
@@ -111,9 +111,9 @@ DeviceAuthorizationResponse parseDeviceAuthorizationResponse(const QByteArray& d
     };
 }
 
-void MSADeviceCodeStep::deviceAuthorizationFinished()
+void MSADeviceCodeStep::deviceAutorizationFinished()
 {
-    auto rsp = parseDeviceAuthorizationResponse(*m_response);
+    auto rsp = parseDeviceAutorizationResponse(*m_response);
     if (!rsp.error.isEmpty() || !rsp.error_description.isEmpty()) {
         qWarning() << "Device authorization failed:" << rsp.error;
         emit finished(AccountTaskState::STATE_FAILED_HARD,
@@ -208,12 +208,12 @@ AuthenticationResponse parseAuthenticationResponse(const QByteArray& data)
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(data, &err);
     if (err.error != QJsonParseError::NoError) {
-        qWarning() << "Failed to parse device authorization response due to err:" << err.errorString();
+        qWarning() << "Failed to parse device autorization response due to err:" << err.errorString();
         return {};
     }
 
     if (!doc.isObject()) {
-        qWarning() << "Device authorization response is not an object";
+        qWarning() << "Device autorization response is not an object";
         return {};
     }
     auto obj = doc.object();
